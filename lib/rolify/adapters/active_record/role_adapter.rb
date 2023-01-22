@@ -74,7 +74,7 @@ module Rolify
       end
 
       def scope(relation, conditions, strict)
-        query = relation.joins(:roles)
+        query = relation.joins(self.role_table.to_sym)
         query = strict ? where_strict(query, conditions) : where(query, conditions)
         query
       end
