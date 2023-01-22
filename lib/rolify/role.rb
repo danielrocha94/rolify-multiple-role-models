@@ -26,14 +26,14 @@ module Rolify
       return has_strict_role?(role_name, resource) if self.class.strict_rolify and resource and resource != :any
 
       if new_record?
-        role_array = self.roles.detect { |r|
+        role_array = adapter_roles.detect { |r|
           r.name.to_s == role_name.to_s &&
             (r.resource == resource ||
              resource.nil? ||
              (resource == :any && r.resource.present?))
         }
       else
-        role_array = self.class.adapter.where(self.roles, name: role_name, resource: resource)
+        role_array = self.class.adapter.where(adapter_roles, name: role_name, resource: resource)
       end
 
       return false if role_array.nil?
@@ -41,16 +41,16 @@ module Rolify
     end
 
     def has_strict_role?(role_name, resource)
-      self.class.adapter.where_strict(self.roles, name: role_name, resource: resource).any?
+      self.class.adapter.where_strict(adapter_roles, name: role_name, resource: resource).any?
     end
 
     def has_cached_role?(role_name, resource = nil)
       return has_strict_cached_role?(role_name, resource) if self.class.strict_rolify and resource and resource != :any
-      self.class.adapter.find_cached(self.roles, name: role_name, resource: resource).any?
+      self.class.adapter.find_cached(adapter_roles, name: role_name, resource: resource).any?
     end
 
     def has_strict_cached_role?(role_name, resource = nil)
-      self.class.adapter.find_cached_strict(self.roles, name: role_name, resource: resource).any?
+      self.class.adapter.find_cached_strict(adapter_roles, name: role_name, resource: resource).any?
     end
 
     def has_all_roles?(*args)
@@ -70,12 +70,12 @@ module Rolify
       if new_record?
         args.any? { |r| self.has_role?(r) }
       else
-        self.class.adapter.where(self.roles, *args).size > 0
+        self.class.adapter.where(adapter_roles, *args).size > 0
       end
     end
 
     def only_has_role?(role_name, resource = nil)
-      return self.has_role?(role_name,resource) && self.roles.count == 1
+      return self.has_role?(role_name,resource) && adapter_roles.count == 1
     end
 
     def remove_role(role_name, resource = nil)
@@ -86,7 +86,7 @@ module Rolify
     deprecate :has_no_role, :remove_role
 
     def roles_name
-      self.roles.pluck(:name)
+      adapter_roles.pluck(:name)
     end
 
     def method_missing(method, *args, &block)
@@ -107,6 +107,12 @@ module Rolify
       else
         super
       end
+    end
+
+    private
+
+    def adapter_roles
+      self.try(self.class.adapter.role_table.to_sym)
     end
   end
 end

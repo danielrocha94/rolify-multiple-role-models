@@ -52,16 +52,16 @@ module Rolify
       end
 
       def add(relation, role)
-        relation.roles << role unless relation.roles.include?(role)
+        adapter_roles(relation) << role unless adapter_roles(relation).include?(role)
       end
 
       def remove(relation, role_name, resource = nil)
         cond = { :name => role_name }
         cond[:resource_type] = (resource.is_a?(Class) ? resource.to_s : resource.class.name) if resource
         cond[:resource_id] = resource.id if resource && !resource.is_a?(Class)
-        roles = relation.roles.where(cond)
+        roles = adapter_roles(relation).where(cond)
         if roles
-          relation.roles.delete(roles)
+          adapter_roles(relation).delete(roles)
           roles.each do |role|
             role.destroy if role.send(ActiveSupport::Inflector.demodulize(user_class).tableize.to_sym).limit(1).empty?
           end if Rolify.remove_role_if_empty
@@ -118,6 +118,10 @@ module Rolify
           query += ")"
         end
         [ query, values ]
+      end
+
+      def adapter_roles(relation) 
+        relation.try(self.role_table.to_sym)
       end
     end
   end
