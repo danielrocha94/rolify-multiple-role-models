@@ -9,7 +9,13 @@ module Rolify
         self.resource_adapter.find_roles(role_name, self, user)
       end
 
-      def with_role(role_name, user = nil)
+      def set_adapter(adapter)
+        return if adapter === self.role_cname
+        resourcify adapter.tableize.gsub(/\//, "_").to_sym, role_cname: adapter
+      end
+
+      def with_role(role_name, user = nil, adapter: nil)
+        set_adapter(adapter) if adapter.present?
         if role_name.is_a? Array
           role_name = role_name.map(&:to_s)
         else
@@ -40,6 +46,5 @@ module Rolify
       #self.roles + self.class.role_class.where(:resource_type => self.class.to_s, :resource_id => nil)
       self.roles + self.class.applied_roles(true)
     end
-
   end
 end
