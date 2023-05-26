@@ -90,7 +90,9 @@ module Rolify
         values = []
         args.each do |arg|
           if arg.is_a? Hash
-            a, v = build_query(arg[:name], arg[:resource])
+            resource = arg[:resource_type].present? ?
+              arg[:resource_type].find(arg[:resource_id]) : arg[:resource]
+            a, v = build_query(arg[:name], resource)
           elsif arg.is_a?(String) || arg.is_a?(Symbol)
             a, v = build_query(arg.to_s)
           else
@@ -105,7 +107,8 @@ module Rolify
 
       def build_query(role, resource = nil)
         return [ "#{role_table}.name = ?", [ role ] ] if resource == :any
-        query = "((#{role_table}.name = ?) AND (#{role_table}.resource_type IS NULL) AND (#{role_table}.resource_id IS NULL))"
+        #query = "((#{role_table}.name = ?) AND (#{role_table}.resource_type IS NULL) AND (#{role_table}.resource_id IS NULL))"
+        query = "(#{role_table}.name = ?)"
         values = [ role ]
         if resource
           query.insert(0, "(")
@@ -120,7 +123,7 @@ module Rolify
         [ query, values ]
       end
 
-      def adapter_roles(relation) 
+      def adapter_roles(relation)
         relation.try(self.role_table.to_sym)
       end
     end

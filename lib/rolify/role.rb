@@ -11,7 +11,7 @@ module Rolify
 
     def add_role(role_name, resource = nil)
       role = self.class.adapter.find_or_create_by(role_name.to_s,
-                                                  (resource.is_a?(Class) ? resource.to_s : resource.class.name if resource),
+                                                  (resource.is_a?(Class) ? resource.base_class.to_s : resource.class.base_class.name if resource),
                                                   (resource.id if resource && !resource.is_a?(Class)))
 
       if !roles.include?(role)
@@ -33,7 +33,7 @@ module Rolify
              (resource == :any && r.resource.present?))
         }
       else
-        role_array = self.class.adapter.where(adapter_roles, name: role_name, resource: resource)
+        role_array = self.class.adapter.where(adapter_roles, name: role_name, resource_type: resource&.class&.base_class, resource_id: resource&.id)
       end
 
       return false if role_array.nil?
@@ -41,16 +41,16 @@ module Rolify
     end
 
     def has_strict_role?(role_name, resource)
-      self.class.adapter.where_strict(adapter_roles, name: role_name, resource: resource).any?
+      self.class.adapter.where_strict(adapter_roles, name: role_name, resource_type: resource.class.base_class, resource_id: resource.id).any?
     end
 
     def has_cached_role?(role_name, resource = nil)
       return has_strict_cached_role?(role_name, resource) if self.class.strict_rolify and resource and resource != :any
-      self.class.adapter.find_cached(adapter_roles, name: role_name, resource: resource).any?
+      self.class.adapter.find_cached(adapter_roles, name: role_name, resource_type: resource.class.base_class, resource_id: resource.id).any?
     end
 
     def has_strict_cached_role?(role_name, resource = nil)
-      self.class.adapter.find_cached_strict(adapter_roles, name: role_name, resource: resource).any?
+      self.class.adapter.find_cached_strict(adapter_roles, name: role_name, resource_type: resource.class.base_class, resource_id: resource.id).any?
     end
 
     def has_all_roles?(*args)

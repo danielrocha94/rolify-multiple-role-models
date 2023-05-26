@@ -65,7 +65,7 @@ module Rolify
   end
 
   def role_class
-    return self.superclass.role_class unless self.instance_variable_defined? '@role_cname'
+    return self.superclass.adapter.role_class unless self.instance_variable_defined? '@role_cname'
     self.role_cname.constantize
   end
 
