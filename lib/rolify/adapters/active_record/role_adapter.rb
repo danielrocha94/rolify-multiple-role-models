@@ -11,10 +11,8 @@ module Rolify
       def where_strict(relation, args)
         wrap_conditions = relation.name != role_class.name
 
-        conditions = if args[:resource].is_a?(Class)
-                       {:resource_type => args[:resource].to_s, :resource_id => nil }
-                     elsif args[:resource].present?
-                       {:resource_type => args[:resource].class.name, :resource_id => args[:resource].id}
+        conditions = if args[:resource_type].present?
+                       {:resource_type => args[:resource_type].to_s, :resource_id => args[:resource_id]}
                      else
                        {}
                      end
